@@ -8,19 +8,11 @@
   <!-- FAVICON ICON -->
   <link rel="icon" type="image/png" href="https://i.postimg.cc/nLWFr8bT/file-00000000bd4482119c9000fc41b37ec4.png">
 
-  <!-- OPEN GRAPH / SOCIAL MEDIA LINK SHARE PREVIEW META TAGS -->
+  <!-- OPEN GRAPH META TAGS -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="EarnerApp - প্রিমিয়াম অনলাইন আর্নিং প্ল্যাটফর্ম">
-  <meta property="og:description" content="সহজ দৈনিক টাস্ক সম্পন্ন করে এবং প্রিমিয়াম প্ল্যান এক্টিভ করে ঘরে বসে আয় শুরু করুন। বিকাশ, নগদ ও রকেটে দ্রুত পেমেন্ট গ্রহণ করুন।">
+  <meta property="og:description" content="সহজ দৈনিক টাস্ক সম্পন্ন করে এবং প্রিমিয়াম প্ল্যান এক্টিভ করে ঘরে বসে আয় শুরু করুন। বিকাশ, নগদ ও রকেটে দ্রুত পেমент গ্রহণ করুন।">
   <meta property="og:image" content="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-
-  <!-- TWITTER CARD META TAGS -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="EarnerApp - প্রিমিয়াম অনলাইন আর্নিং প্ল্যাটফর্ম">
-  <meta name="twitter:description" content="সহজ দৈনিক টাস্ক সম্পন্ন করে এবং প্রিমিয়াম প্ল্যান এক্টিভ করে ঘরে বসে আয় শুরু করুন।">
-  <meta name="twitter:image" content="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png">
 
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -29,15 +21,14 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 </head>
 <body>
 
-  <!-- AUTH MODAL CONTAINER -->
+  <!-- AUTH MODAL -->
   <div id="auth-container" class="modal-overlay">
     <div class="modal-content">
       
-      <!-- 1. LOGIN FORM -->
+      <!-- LOGIN FORM -->
       <form id="login-form">
         <div style="text-align:center; margin-bottom:15px;">
           <img src="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png" id="login-app-logo" class="auth-ring-avatar" alt="Logo">
@@ -61,7 +52,7 @@
         </p>
       </form>
 
-      <!-- 2. REGISTER FORM -->
+      <!-- REGISTER FORM -->
       <form id="register-form" class="hidden">
         <div style="text-align:center; margin-bottom:15px;">
           <img src="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png" class="auth-ring-avatar" alt="Logo">
@@ -97,7 +88,7 @@
         </p>
       </form>
 
-      <!-- 3. FORGOT / RESET PASSWORD FORM -->
+      <!-- FORGOT PASSWORD FORM -->
       <form id="forgot-password-form" class="hidden">
         <div style="text-align:center; margin-bottom:15px;">
           <img src="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png" class="auth-ring-avatar" alt="Logo">
@@ -155,6 +146,40 @@
     </div>
   </div>
 
+  <!-- GEMINI AI ASSISTANT CHAT MODAL -->
+  <div id="ai-chat-modal" class="modal-overlay hidden">
+    <div class="modal-content ai-chat-card">
+      <div class="ai-chat-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <i class="fa-solid fa-wand-magic-sparkles gemini-sparkle-icon"></i>
+          <div>
+            <h4 style="font-size:15px; font-weight:800; color:#fff;">EarnerApp AI Support ✨</h4>
+            <span style="font-size:10px; color:rgba(255,255,255,0.85);"><i class="fa-solid fa-circle" style="color:#00f5a0; font-size:8px;"></i> অনলাইন সহায়তা</span>
+          </div>
+        </div>
+        <i class="fa-solid fa-xmark" style="font-size:20px; color:#fff; cursor:pointer;" onclick="closeAiChatModal()"></i>
+      </div>
+
+      <div class="ai-chat-messages" id="ai-chat-messages">
+        <div class="chat-msg ai">
+          <span>👋 স্বাগতম! আমি আপনার AI সহায়কারী। সাইটের যেকোনো তথ্য, ডিপোজিট, উইথড্র বা আপনার একাউন্ট ব্যালেন্স সম্পর্কে জিজ্ঞেস করুন!</span>
+        </div>
+      </div>
+
+      <!-- Quick Suggestion Chips -->
+      <div class="ai-chip-container">
+        <div class="ai-chip" onclick="sendQuickAiPrompt('আমার ওয়ালেট ব্যালেন্স কত?')">💰 ব্যালেন্স কত?</div>
+        <div class="ai-chip" onclick="sendQuickAiPrompt('কীভাবে ডিপোজিট করব?')">💳 ডিপোজিট নিয়ম</div>
+        <div class="ai-chip" onclick="sendQuickAiPrompt('উইথড্র নিয়ম ও চার্জ কত?')">💸 উইথড্র চার্জ</div>
+      </div>
+
+      <div class="ai-chat-footer">
+        <input type="text" id="ai-chat-input" class="form-control" placeholder="আপনার প্রশ্নটি লিখুন..." onkeypress="handleAiInputKeyPress(event)">
+        <button class="btn-action" style="width:auto; padding:12px 18px;" onclick="submitAiChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
   <!-- SIDEBAR DRAWER OVERLAY -->
   <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
   <div id="sidebar-drawer" class="sidebar-drawer">
@@ -173,7 +198,6 @@
       <li onclick="switchTab('tab-deposit'); closeSidebar()"><i class="fa-solid fa-wallet"></i> ডিপোজিট করুন</li>
       <li onclick="switchTab('tab-withdraw'); closeSidebar()"><i class="fa-solid fa-money-bill-transfer"></i> উত্তোলন করুন</li>
       <li onclick="switchTab('tab-profile'); closeSidebar()"><i class="fa-solid fa-user-gear"></i> একাউন্ট সেটিংস</li>
-      <li onclick="toggleAppTheme(); closeSidebar()"><i class="fa-solid fa-circle-half-stroke"></i> ডার্ক / লাইট মোড</li>
       <li onclick="logout(); closeSidebar()"><i class="fa-solid fa-right-from-bracket" style="color:var(--danger)"></i> লগআউট</li>
     </ul>
   </div>
@@ -194,7 +218,6 @@
           </div>
         </div>
       </div>
-      <button id="enable-push-btn" class="btn-action" style="margin-top:10px;background:#2563eb;" onclick="enablePushNotifications()">🔔 ফোন নোটিফিকেশন চালু করুন</button>
       <button class="btn-action" style="margin-top:15px;" onclick="closeNotifModal()">বন্ধ করুন</button>
     </div>
   </div>
@@ -202,7 +225,7 @@
   <!-- MAIN APP CONTAINER -->
   <div id="app-container" class="app-viewport hidden">
 
-    <!-- TOP HEADER -->
+    <!-- TOP HEADER (WITH AI SPARKLE ICON & DARK/LIGHT MODE SWITCHER NEXT TO IT) -->
     <header class="top-header">
       <div class="header-left">
         <i class="fa-solid fa-bars menu-icon" onclick="openSidebar()"></i>
@@ -212,11 +235,20 @@
         </div>
       </div>
       
-      <div style="display:flex; align-items:center; gap:12px;">
+      <!-- HEADER RIGHT CONTROLS: GEMINI AI ICON + THEME TOGGLE + BELL ICON -->
+      <div style="display:flex; align-items:center; gap:10px;">
+        
+        <!-- GEMINI AI ASSISTANT ICON -->
+        <div class="ai-header-btn" onclick="openAiChatModal()" title="AI সাপোর্ট অ্যাসিস্ট্যান্ট">
+          <i class="fa-solid fa-wand-magic-sparkles gemini-icon-animated"></i>
+        </div>
+
+        <!-- DARK / LIGHT MODE TOGGLE BUTTON -->
         <div class="theme-toggle-btn" onclick="toggleAppTheme()" title="থিম পরিবর্তন করুন">
           <i id="theme-icon" class="fa-solid fa-moon"></i>
         </div>
 
+        <!-- NOTIFICATION BELL ICON -->
         <div class="notif-wrapper" onclick="openNotifModal()">
           <i class="fa-solid fa-bell notif-icon"></i>
           <span class="notif-badge-dot"></span>
@@ -252,7 +284,7 @@
     <!-- TAB 1: DASHBOARD -->
     <div id="tab-home" class="tab-content active">
 
-      <!-- HOMEPAGE CAROUSEL BANNER SLIDER (HIDDEN IF NO ADMIN SLIDER) -->
+      <!-- HOMEPAGE CAROUSEL BANNER SLIDER -->
       <div class="slider-container-card hidden" id="homepage-slider-card">
         <div class="slider-wrapper">
           <img id="slider-img" src="" alt="Banner Slider" class="slider-img">
@@ -562,9 +594,7 @@
 
   <!-- FLOATING 90-DEGREE SUPPORT FAB WHEEL BUTTON -->
   <div class="fab-support-container" id="fab-support-container">
-    <div class="fab-support-menu" id="fab-support-menu">
-      <!-- Dynamic Social Media Icons loaded from Admin Panel -->
-    </div>
+    <div class="fab-support-menu" id="fab-support-menu"></div>
     <button class="fab-main-btn" onclick="toggleSupportFab()" title="সাপোর্ট ও সোশ্যাল মিডিয়া">
       <i class="fa-solid fa-headset fab-icon"></i>
     </button>
