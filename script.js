@@ -1,6 +1,17 @@
 const DEFAULT_AVATAR = "https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png";
 
-// UNIVERSAL CUSTOM ALERT SYSTEM (NO BROWSER NATIVE ALERT)
+// EXPLICIT GLOBAL BINDINGS FOR AI & MODALS AT VERY TOP OF FILE
+window.openAiChatModal = function() {
+  const modal = document.getElementById('ai-chat-modal');
+  if (modal) modal.classList.remove('hidden');
+};
+
+window.closeAiChatModal = function() {
+  const modal = document.getElementById('ai-chat-modal');
+  if (modal) modal.classList.add('hidden');
+};
+
+// UNIVERSAL CUSTOM ALERT SYSTEM
 window.showCustomAlert = function(message, title = "বিজ্ঞপ্তি", iconType = "success") {
   const modal = document.getElementById('app-alert-modal');
   const titleEl = document.getElementById('app-alert-title');
@@ -62,6 +73,154 @@ window.closeCustomConfirm = function() {
   onConfirmCallback = null;
 };
 
+// GEMINI / AI CHAT ENGINE
+let aiConfigData = null;
+
+function loadAiAssistantConfig() {
+  db.ref('settings/ai_config').on('value', snap => {
+    if (snap.exists()) {
+      aiConfigData = snap.val();
+    }
+  });
+}
+
+window.sendQuickAiPrompt = function(text) {
+  const input = document.getElementById('ai-chat-input');
+  if (input) {
+    input.value = text;
+    submitAiChatMessage();
+  }
+};
+
+window.handleAiInputKeyPress = function(e) {
+  if (e.key === 'Enter') {
+    submitAiChatMessage();
+  }
+};
+
+window.submitAiChatMessage = async function() {
+  const input = document.getElementById('ai-chat-input');
+  const query = input.value.trim();
+  if (!query) return;
+
+  const messagesContainer = document.getElementById('ai-chat-messages');
+  
+  messagesContainer.innerHTML += `
+    <div class="chat-msg user">
+      <span>${escapeHtml(query)}</span>
+    </div>
+  `;
+  input.value = '';
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  const typingId = 'typing-' + Date.now();
+  messagesContainer.innerHTML += `
+    <div class="chat-msg ai" id="${typingId}">
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+    </div>
+  `;
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  const aiResponseText = await generateAiKnowledgeResponse(query);
+
+  const typingEl = document.getElementById(typingId);
+  if (typingEl) {
+    typingEl.innerHTML = `<span>${formatAiText(aiResponseText)}</span>`;
+  }
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+};
+
+async function generateAiKnowledgeResponse(userQuery) {
+  if (!aiConfigData || aiConfigData.enabled === false || !aiConfigData.apiKey) {
+    return "দুঃখিত! AI সাপোর্ট সার্ভিসটি বর্তমানে বন্ধ রয়েছে। যেকোনো জরুরী প্রয়োজনে এডমিনের সাথে যোগাযোগ করুন।";
+  }
+
+  const apiKey = aiConfigData.apiKey.trim();
+  const model = aiConfigData.model ? aiConfigData.model.trim() : "gemini-1.5-flash";
+  let endpoint = aiConfigData.apiEndpoint ? aiConfigData.apiEndpoint.trim() : "";
+
+  if (!endpoint) {
+    endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  }
+
+  const userBal = userData ? ((userData.depositBalance || 0) + (userData.incomeBalance || 0)).toFixed(2) : '0';
+  const depBal = userData ? (userData.depositBalance || 0).toFixed(2) : '0';
+  const incBal = userData ? (userData.incomeBalance || 0).toFixed(2) : '0';
+  const userVip = userData ? (userData.vipLevel || 0) : 0;
+  const planName = userData ? (userData.vipPlanName || 'নো প্ল্যান') : 'নো প্ল্যান';
+
+  const systemPrompt = aiConfigData.systemPrompt || "আপনি EarnerApp-এর অফিসিয়াল AI সহায়কারী। ইউজারকে বাংলা ভাষায় বিনম্রভাবে সাহায্য করুন।";
+
+  const contextPrompt = `
+${systemPrompt}
+
+[ইউজারের বর্তমান তথ্য]:
+- নাম: ${userData ? userData.name : 'User'}
+- এক্টিভ VIP: Level ${userVip} (${planName})
+- মোট ব্যালেন্স: ৳${userBal} (ডিপোজিট: ৳${depBal}, ইনকাম: ৳${incBal})
+
+[নিয়মকানুন]:
+- সর্বনিম্ন উইথড্র: ৳${systemMinWithdraw}
+- উইথড্র ফি: ${userData ? (userData.withdrawChargePercent || systemWithdrawChargePercent) : systemWithdrawChargePercent}%
+- প্ল্যান নেওয়ার নিয়ম: শুধুমাত্র ডিপোজিট ব্যালেন্স দিয়ে প্ল্যান কেনা যায়।
+- উইথড্র করার নিয়ম: উইথড্র করতে অন্তত ১টি প্ল্যান এক্টিভ থাকতে হবে।
+
+ইউজারের প্রশ্ন: ${userQuery}
+  `;
+
+  let fullUrl = endpoint;
+  let requestBody = {};
+  let headers = { "Content-Type": "application/json" };
+
+  if (endpoint.includes("generativelanguage.googleapis.com") || endpoint.includes("generateContent")) {
+    if (!fullUrl.includes("key=")) {
+      fullUrl += (fullUrl.includes("?") ? "&" : "?") + `key=${apiKey}`;
+    }
+    requestBody = {
+      contents: [{ role: "user", parts: [{ text: contextPrompt }] }]
+    };
+  } else {
+    headers["Authorization"] = `Bearer ${apiKey}`;
+    requestBody = {
+      model: model,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: contextPrompt }
+      ]
+    };
+  }
+
+  try {
+    const response = await fetch(fullUrl, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(requestBody)
+    });
+
+    const data = await response.json();
+
+    if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
+      return data.candidates[0].content.parts[0].text;
+    } else if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+      return data.choices[0].message.content;
+    } else if (data.error) {
+      return "AI সার্ভিস এরর: " + (data.error.message || JSON.stringify(data.error));
+    } else {
+      return "দুঃখিত, কোনো উত্তর পাওয়া যায়নি।";
+    }
+  } catch (err) {
+    return "নেটওয়ার্ক কানেকশন ত্রুটি! অনুগ্রহ করে আবার চেষ্টা করুন। (" + err.message + ")";
+  }
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function formatAiText(text) {
+  return text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+}
+
 // THEME TOGGLE LOGIC
 function initAppTheme() {
   const savedTheme = localStorage.getItem('app-theme') || 'light';
@@ -87,54 +246,6 @@ function updateThemeToggleIcon(theme) {
 
 initAppTheme();
 
-// AUTH FORM SWITCHERS WITH CLEAN URL ROUTING
-window.showRegisterForm = function(e) {
-  if (e) e.preventDefault();
-  const loginForm = document.getElementById('login-form');
-  const regForm = document.getElementById('register-form');
-  const forgotForm = document.getElementById('forgot-password-form');
-
-  if (loginForm) loginForm.classList.add('hidden');
-  if (forgotForm) forgotForm.classList.add('hidden');
-  if (regForm) regForm.classList.remove('hidden');
-
-  const pendingRef = localStorage.getItem('pendingRefCode') || '';
-  const newUrl = '/register' + (pendingRef ? '?ref=' + pendingRef : '');
-  if (window.location.pathname !== '/register') {
-    window.history.pushState({}, '', newUrl);
-  }
-};
-
-window.showLoginForm = function(e) {
-  if (e) e.preventDefault();
-  const loginForm = document.getElementById('login-form');
-  const regForm = document.getElementById('register-form');
-  const forgotForm = document.getElementById('forgot-password-form');
-
-  if (regForm) regForm.classList.add('hidden');
-  if (forgotForm) forgotForm.classList.add('hidden');
-  if (loginForm) loginForm.classList.remove('hidden');
-
-  if (window.location.pathname !== '/login') {
-    window.history.pushState({}, '', '/login');
-  }
-};
-
-window.showForgotForm = function(e) {
-  if (e) e.preventDefault();
-  const loginForm = document.getElementById('login-form');
-  const regForm = document.getElementById('register-form');
-  const forgotForm = document.getElementById('forgot-password-form');
-
-  if (loginForm) loginForm.classList.add('hidden');
-  if (regForm) regForm.classList.add('hidden');
-  if (forgotForm) forgotForm.classList.remove('hidden');
-
-  if (window.location.pathname !== '/forgot') {
-    window.history.pushState({}, '', '/forgot');
-  }
-};
-
 let currentUser = null;
 let userData = null;
 let isBalanceShown = false;
@@ -148,8 +259,6 @@ let sliderImagesList = [];
 let sliderIndex = 0;
 let sliderIntervalTimer = null;
 let incomeChartInstance = null;
-let systemMinWithdraw = 200;
-let systemWithdrawChargePercent = 5;
 
 // Auth Observer
 auth.onAuthStateChanged((user) => {
@@ -165,6 +274,7 @@ auth.onAuthStateChanged((user) => {
     loadReferralCommissionHistory();
     loadGatewaysAndNotices();
     loadHomepageSliders();
+    loadAiAssistantConfig();
     renderLiveWithdrawsInfinite();
     listenLiveBroadcastNotifications();
     checkAndShowWelcomeNotice();
@@ -198,12 +308,6 @@ window.closeNotifModal = function() {
 
 window.closeWelcomeModal = function() {
   document.getElementById('welcome-modal').classList.add('hidden');
-};
-
-window.closeTaskModal = function() {
-  document.getElementById('task-modal').classList.add('hidden');
-  document.getElementById('task-processing-view').classList.remove('hidden');
-  document.getElementById('task-success-view').classList.add('hidden');
 };
 
 window.toggleBkashBalance = function() {
@@ -295,7 +399,7 @@ window.switchTab = function(tabId, el, isDirectPlanTrigger = false, pushState = 
   }
 };
 
-window.addEventListener('popstate', (e) => {
+window.addEventListener('popstate', () => {
   handleInitialPathRouting();
 });
 
@@ -783,10 +887,10 @@ function loadTasks(completedTaskIds = {}) {
     const userVipTasks = [];
 
     if (snap.exists()) {
-      // EXPLICIT UNIQUE FIREBASE KEY MAPPING FOR EVERY SINGLE TASK
+      // EXPLICIT UNIQUE FIREBASE KEY BINDING FOR EVERY SINGLE TASK
       snap.forEach(child => {
         const task = child.val();
-        task.id = child.key; // Unique Firebase Key
+        task.id = child.key; // Assign Unique Key
         
         const isFree = Number(task.minVip || 0) === 0 || task.isFree === true;
         
