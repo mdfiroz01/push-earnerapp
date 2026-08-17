@@ -77,6 +77,7 @@ function loadAdminDashboard() {
   loadGatewaysAdmin();
   loadSocialSupportAdmin();
   loadWelcomeNoticeAdmin();
+  loadAiConfigAdmin();
   loadSettingsAdmin();
 }
 
@@ -115,7 +116,40 @@ function loadSettingsAdmin() {
 }
 
 // ----------------------------------------------------
-// 2. USER MANAGEMENT
+// 2. GEMINI AI ASSISTANT CONFIGURATION
+// ----------------------------------------------------
+document.getElementById('admin-ai-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  await ensureAdminFirebaseAuth();
+
+  const aiData = {
+    apiKey: document.getElementById('ai-api-key').value,
+    model: document.getElementById('ai-model').value,
+    apiEndpoint: document.getElementById('ai-endpoint').value,
+    systemPrompt: document.getElementById('ai-system-prompt').value,
+    enabled: document.getElementById('ai-enable-toggle').checked
+  };
+
+  db.ref('settings/ai_config').set(aiData).then(() => {
+    alert('Gemini AI অ্যাসিস্ট্যান্ট সেটিংস সফলভাবে সেভ করা হয়েছে!');
+  }).catch(err => alert('Error: ' + err.message));
+});
+
+function loadAiConfigAdmin() {
+  db.ref('settings/ai_config').once('value', snap => {
+    if (snap.exists()) {
+      const ai = snap.val();
+      document.getElementById('ai-api-key').value = ai.apiKey || '';
+      document.getElementById('ai-model').value = ai.model || 'gemini-1.5-flash';
+      document.getElementById('ai-endpoint').value = ai.apiEndpoint || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+      document.getElementById('ai-system-prompt').value = ai.systemPrompt || '';
+      document.getElementById('ai-enable-toggle').checked = ai.enabled !== false;
+    }
+  });
+}
+
+// ----------------------------------------------------
+// 3. USER MANAGEMENT
 // ----------------------------------------------------
 function loadUsersAdmin() {
   db.ref('users').on('value', snap => {
@@ -221,7 +255,7 @@ window.toggleBlockUser = async function(uid, blockState) {
 };
 
 // ----------------------------------------------------
-// 3. VIP PLAN EDIT & MANAGEMENT
+// 4. VIP PLAN EDIT & MANAGEMENT
 // ----------------------------------------------------
 document.getElementById('admin-add-plan-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -308,7 +342,7 @@ window.resetPlanForm = function() {
 };
 
 // ----------------------------------------------------
-// 4. TASK CREATION WITH ATOMIC MULTI-UPDATE BATCHing
+// 5. TASK CREATION WITH ATOMIC MULTI-UPDATE BATCHing
 // ----------------------------------------------------
 document.getElementById('admin-add-task-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -397,7 +431,63 @@ window.resetTaskForm = function() {
 };
 
 // ----------------------------------------------------
-// 5. DEPOSITS MANAGEMENT (FIXED APPROVAL)
+// 6. SOCIAL MEDIA SUPPORT FAB MANAGEMENT
+// ----------------------------------------------------
+document.getElementById('admin-social-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  await ensureAdminFirebaseAuth();
+
+  const editKey = document.getElementById('edit-social-key').value;
+  const socialData = {
+    name: document.getElementById('social-name').value,
+    icon: document.getElementById('social-icon').value,
+    url: document.getElementById('social-url').value
+  };
+
+  if (editKey) {
+    db.ref('social_support/' + editKey).update(socialData).then(() => {
+      alert('সোশ্যাল সাপোর্ট লিংক আপডেট হয়েছে!');
+      resetSocialForm();
+    });
+  } else {
+    const newRef = db.ref('social_support').push();
+    socialData.id = newRef.key;
+    newRef.set(socialData).then(() => {
+      alert('নতুন সোশ্যাল সাপোর্ট লিংক যোগ করা হয়েছে!');
+      resetSocialForm();
+    });
+  }
+});
+
+function loadSocialSupportAdmin() {
+  db.ref('social_support').on('value', snap => {
+    const list = document.getElementById('admin-social-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!snap.exists()) return;
+
+    snap.forEach(child => {
+      const s = child.val();
+      const key = child.key;
+      list.innerHTML += `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #e2e8f0; font-size:12px;">
+          <div><i class="${s.icon}" style="color:#05b381; font-size:16px;"></i> <b>${s.name}</b><br><small style="color:#64748b">${s.url}</small></div>
+          <div>
+            <button class="btn-action-sm btn-danger" onclick="db.ref('social_support/${key}').remove()">Delete</button>
+          </div>
+        </div>
+      `;
+    });
+  });
+}
+
+function resetSocialForm() {
+  document.getElementById('edit-social-key').value = '';
+  document.getElementById('admin-social-form').reset();
+}
+
+// ----------------------------------------------------
+// 7. DEPOSITS & WITHDRAWALS
 // ----------------------------------------------------
 function loadDepositsAdmin() {
   db.ref('deposits').on('value', snap => {
@@ -549,9 +639,6 @@ function processReferralCommission(referrerRefCode, buyerName, buyerRefCode, pla
   });
 }
 
-// ----------------------------------------------------
-// 6. WITHDRAWALS MANAGEMENT (FIXED APPROVAL & REJECTION)
-// ----------------------------------------------------
 function loadWithdrawsAdmin() {
   db.ref('withdraws').on('value', snap => {
     const tbody = document.getElementById('admin-wit-table');
@@ -608,7 +695,7 @@ window.rejectWithdraw = async function(witId, uid, amount) {
     
     const updates = {};
     updates[`users/${uid}/incomeBalance`] = (u.incomeBalance || 0) + amount;
-    updates[`withdraws/${witId}/status`] = 'rejected';
+    updates[`withdraws/${witId}/status`].set('rejected');
 
     await db.ref().update(updates);
     alert('উত্তোলন বাতিল করা হয়েছে এবং ইউজারের ব্যালেন্স রিফান্ড করা হয়েছে।');
@@ -617,9 +704,7 @@ window.rejectWithdraw = async function(witId, uid, amount) {
   }
 };
 
-// ----------------------------------------------------
-// 7. UNLIMITED DYNAMIC PAYMENT GATEWAYS
-// ----------------------------------------------------
+// UNLIMITED DYNAMIC PAYMENT GATEWAYS
 document.getElementById('admin-gateway-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   await ensureAdminFirebaseAuth();
@@ -686,65 +771,7 @@ window.resetGatewayForm = function() {
   document.getElementById('admin-gateway-form').reset();
 };
 
-// ----------------------------------------------------
-// 8. SOCIAL MEDIA SUPPORT FAB
-// ----------------------------------------------------
-document.getElementById('admin-social-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  await ensureAdminFirebaseAuth();
-
-  const editKey = document.getElementById('edit-social-key').value;
-  const socialData = {
-    name: document.getElementById('social-name').value,
-    icon: document.getElementById('social-icon').value,
-    url: document.getElementById('social-url').value
-  };
-
-  if (editKey) {
-    db.ref('social_support/' + editKey).update(socialData).then(() => {
-      alert('সোশ্যাল সাপোর্ট লিংক আপডেট হয়েছে!');
-      resetSocialForm();
-    });
-  } else {
-    const newRef = db.ref('social_support').push();
-    socialData.id = newRef.key;
-    newRef.set(socialData).then(() => {
-      alert('নতুন সোশ্যাল সাপোর্ট লিংক যোগ করা হয়েছে!');
-      resetSocialForm();
-    });
-  }
-});
-
-function loadSocialSupportAdmin() {
-  db.ref('social_support').on('value', snap => {
-    const list = document.getElementById('admin-social-list');
-    if (!list) return;
-    list.innerHTML = '';
-    if (!snap.exists()) return;
-
-    snap.forEach(child => {
-      const s = child.val();
-      const key = child.key;
-      list.innerHTML += `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #e2e8f0; font-size:12px;">
-          <div><i class="${s.icon}" style="color:#05b381; font-size:16px;"></i> <b>${s.name}</b><br><small style="color:#64748b">${s.url}</small></div>
-          <div>
-            <button class="btn-action-sm btn-danger" onclick="db.ref('social_support/${key}').remove()">Delete</button>
-          </div>
-        </div>
-      `;
-    });
-  });
-}
-
-function resetSocialForm() {
-  document.getElementById('edit-social-key').value = '';
-  document.getElementById('admin-social-form').reset();
-}
-
-// ----------------------------------------------------
-// 9. SLIDER, WELCOME NOTICE & BROADCAST
-// ----------------------------------------------------
+// SLIDER, WELCOME NOTICE & BROADCAST
 window.addSliderBannerImage = async function() {
   await ensureAdminFirebaseAuth();
   const url = document.getElementById('admin-slider-url-input').value;
