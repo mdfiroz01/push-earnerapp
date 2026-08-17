@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -51,7 +52,7 @@
       <li onclick="showAdminSection('sec-stats')"><i class="fa-solid fa-chart-pie"></i> ওভারভিউ ড্যাশবোর্ড</li>
       <li onclick="showAdminSection('sec-users')"><i class="fa-solid fa-users"></i> ইউজার কন্ট্রোল ও ফুল ইনফো</li>
       <li onclick="showAdminSection('sec-plans')"><i class="fa-solid fa-crown"></i> VIP প্ল্যান, রেফার ও উইথড্র ফি %</li>
-      <li onclick="showAdminSection('sec-tasks')"><i class="fa-solid fa-list-check"></i> টাস্ক তৈরি ও ইডিট (পরিমাণ সহ)</li>
+      <li onclick="showAdminSection('sec-tasks')"><i class="fa-solid fa-list-check"></i> টাস্ক তৈরি (পরিমাণ সহ)</li>
       <li onclick="showAdminSection('sec-gateways')"><i class="fa-solid fa-credit-card"></i> আনলিমিটেড পেমেন্ট মেথড</li>
       <li onclick="showAdminSection('sec-deposits')"><i class="fa-solid fa-wallet"></i> ডিপোজিট রিকোয়েস্ট</li>
       <li onclick="showAdminSection('sec-withdraws')"><i class="fa-solid fa-money-bill-transfer"></i> উত্তোলন রিকোয়েস্ট</li>
@@ -131,9 +132,47 @@
       <div id="admin-plans-list" style="margin-top:10px;"></div>
     </div>
 
-    <!-- SECTION 4: TASK CREATION WITH QUANTITY -->
+    <!-- SECTION 4: UNLIMITED PAYMENT GATEWAYS -->
+    <div id="sec-gateways" class="admin-section hidden admin-card">
+      <h3 id="gateway-form-title"><i class="fa-solid fa-credit-card" style="color:#05b381"></i> পেমেন্ট মেথড তৈরি ও এড</h3>
+      <form id="admin-gateway-form" style="display:grid; gap:10px; margin-top:10px;">
+        <input type="hidden" id="edit-gateway-key" value="">
+        <input type="text" id="gateway-name" class="admin-form-control" placeholder="মেথডের নাম (e.g. bKash / USDT)" required>
+        <select id="gateway-type" class="admin-form-control" required>
+          <option value="both">ডিপোজিট ও উইথড্র উভয়ই</option>
+          <option value="deposit">শুধু ডিপোজিট</option>
+          <option value="withdraw">শুধু উইথড্র</option>
+        </select>
+        <input type="text" id="gateway-number" class="admin-form-control" placeholder="একাউন্ট নম্বর / ওয়ালেট অ্যাড্রেস" required>
+        <input type="url" id="gateway-logo" class="admin-form-control" placeholder="লোগো ছবি URL" required>
+
+        <button type="submit" id="btn-save-gateway" class="btn-action">মেথড সেভ করুন</button>
+        <button type="button" id="btn-cancel-gateway" class="btn-action btn-cancel hidden" onclick="resetGatewayForm()">বাতিল করুন</button>
+      </form>
+      <div id="admin-gateways-list" style="margin-top:10px;"></div>
+    </div>
+
+    <!-- SECTION 5: APP LOGO, MIN WITHDRAW & CHARGE SETTINGS -->
+    <div id="sec-settings" class="admin-section hidden admin-card">
+      <h3><i class="fa-solid fa-gears" style="color:#05b381"></i> লোগো, ডিফোল্ট উইথড্র ফি ও লিমিট</h3>
+      <div class="form-group" style="margin-top:10px;">
+        <label>সাইটের লোগো ছবি URL (Site Logo URL)</label>
+        <input type="url" id="cfg-site-logo" class="admin-form-control" placeholder="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png" value="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png">
+      </div>
+      <div class="form-group">
+        <label>সর্বনিম্ন উত্তোলন লিমিট (৳)</label>
+        <input type="number" id="cfg-min-withdraw" class="admin-form-control" placeholder="200" value="200">
+      </div>
+      <div class="form-group">
+        <label>ডিফোল্ট উত্তোলন প্রসেসিং চার্জ (%)</label>
+        <input type="number" step="0.1" id="cfg-withdraw-charge" class="admin-form-control" placeholder="5" value="5">
+      </div>
+      <button class="btn-action" onclick="saveSystemSettings()">সেটিংস সেভ করুন</button>
+    </div>
+
+    <!-- SECTION 6: TASK CREATION WITH QUANTITY FIELD -->
     <div id="sec-tasks" class="admin-section hidden admin-card">
-      <h3 id="task-form-title"><i class="fa-solid fa-list-check" style="color:#05b381"></i> টাস্ক তৈরি ও ইডিট</h3>
+      <h3 id="task-form-title"><i class="fa-solid fa-list-check" style="color:#05b381"></i> টাস্ক তৈরি / ইডিট</h3>
       
       <form id="admin-add-task-form" style="display: grid; gap: 10px; margin-top: 15px;">
         <input type="hidden" id="edit-task-key" value="">
@@ -157,44 +196,6 @@
 
       <h4 style="margin-top:15px;">বিদ্যমান টাস্কসমূহ:</h4>
       <div id="admin-tasks-list" style="margin-top:10px;"></div>
-    </div>
-
-    <!-- SECTION 5: UNLIMITED PAYMENT GATEWAYS -->
-    <div id="sec-gateways" class="admin-section hidden admin-card">
-      <h3 id="gateway-form-title"><i class="fa-solid fa-credit-card" style="color:#05b381"></i> পেমেন্ট মেথড তৈরি ও এড</h3>
-      <form id="admin-gateway-form" style="display:grid; gap:10px; margin-top:10px;">
-        <input type="hidden" id="edit-gateway-key" value="">
-        <input type="text" id="gateway-name" class="admin-form-control" placeholder="মেথডের নাম (e.g. bKash / USDT)" required>
-        <select id="gateway-type" class="admin-form-control" required>
-          <option value="both">ডিপোজিট ও উইথড্র উভয়ই</option>
-          <option value="deposit">শুধু ডিপোজিট</option>
-          <option value="withdraw">শুধু উইথড্র</option>
-        </select>
-        <input type="text" id="gateway-number" class="admin-form-control" placeholder="একাউন্ট নম্বর / ওয়ালেট অ্যাড্রেস" required>
-        <input type="url" id="gateway-logo" class="admin-form-control" placeholder="লোগো ছবি URL" required>
-
-        <button type="submit" id="btn-save-gateway" class="btn-action">মেথড সেভ করুন</button>
-        <button type="button" id="btn-cancel-gateway" class="btn-action btn-cancel hidden" onclick="resetGatewayForm()">বাতিল করুন</button>
-      </form>
-      <div id="admin-gateways-list" style="margin-top:10px;"></div>
-    </div>
-
-    <!-- SECTION 6: APP LOGO & WITHDRAW SETTINGS -->
-    <div id="sec-settings" class="admin-section hidden admin-card">
-      <h3><i class="fa-solid fa-gears" style="color:#05b381"></i> লোগো, ডিফোল্ট উইথড্র ফি ও লিমিট</h3>
-      <div class="form-group" style="margin-top:10px;">
-        <label>সাইটের লোগো ছবি URL (Site Logo URL)</label>
-        <input type="url" id="cfg-site-logo" class="admin-form-control" placeholder="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png" value="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png">
-      </div>
-      <div class="form-group">
-        <label>সর্বনিম্ন উত্তোলন লিমিট (৳)</label>
-        <input type="number" id="cfg-min-withdraw" class="admin-form-control" placeholder="200" value="200">
-      </div>
-      <div class="form-group">
-        <label>ডিফোল্ট উত্তোলন প্রসেসিং চার্জ (%)</label>
-        <input type="number" step="0.1" id="cfg-withdraw-charge" class="admin-form-control" placeholder="5" value="5">
-      </div>
-      <button class="btn-action" onclick="saveSystemSettings()">সেটিংস সেভ করুন</button>
     </div>
 
     <!-- SECTION 7: DEPOSITS MANAGEMENT -->
