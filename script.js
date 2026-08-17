@@ -1,6 +1,6 @@
 const DEFAULT_AVATAR = "https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png";
 
-// UNIVERSAL CUSTOM ALERT SYSTEM
+// UNIVERSAL CUSTOM ALERT SYSTEM (NO BROWSER NATIVE ALERT)
 window.showCustomAlert = function(message, title = "বিজ্ঞপ্তি", iconType = "success") {
   const modal = document.getElementById('app-alert-modal');
   const titleEl = document.getElementById('app-alert-title');
@@ -151,118 +151,6 @@ let incomeChartInstance = null;
 let systemMinWithdraw = 200;
 let systemWithdrawChargePercent = 5;
 
-
-// FIREBASE WEB PUSH NOTIFICATIONS (FCM)
-// Replace this with the Web Push certificate public key from Firebase Console:
-// Project settings -> Cloud Messaging -> Web configuration -> Web Push certificates.
-const FCM_VAPID_KEY = "BOWagt56dvD6oPyBwTgSGOiinIDLJINPSbemQQ9aQ68w6WikY1EBAaQZb1-e9fUrTu1P9RultlAkxk-54A8kEUM";
-
-let pushMessaging = null;
-
-async function registerPushServiceWorker() {
-  if (!('serviceWorker' in navigator) || !('Notification' in window)) {
-    return null;
-  }
-  try {
-    return await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-  } catch (e) {
-    console.error('FCM service worker registration failed:', e);
-    return null;
-  }
-}
-
-async function enablePushNotifications() {
-  if (!currentUser) return;
-  if (FCM_VAPID_KEY === "YOUR_FIREBASE_VAPID_PUBLIC_KEY") {
-    showCustomAlert("প্রথমে Firebase Console থেকে Web Push VAPID public key বসাতে হবে।", "Push সেটআপ বাকি", "warning");
-    return;
-  }
-  try {
-    const registration = await registerPushServiceWorker();
-    if (!registration) throw new Error('Service worker unavailable');
-
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      showCustomAlert("নোটিফিকেশন অনুমতি দেওয়া হয়নি। ব্রাউজার সেটিংস থেকে Notifications Allow করুন।", "অনুমতি প্রয়োজন", "warning");
-      return;
-    }
-
-    pushMessaging = firebase.messaging();
-    const token = await pushMessaging.getToken({
-      vapidKey: FCM_VAPID_KEY,
-      serviceWorkerRegistration: registration
-    });
-
-    if (!token) throw new Error('FCM token not returned');
-
-    await db.ref('users/' + currentUser.uid + '/fcmTokens/' + encodeURIComponent(token).replace(/\./g, '%2E')).set({
-      token: token,
-      updatedAt: firebase.database.ServerValue.TIMESTAMP
-    });
-
-    const btn = document.getElementById('enable-push-btn');
-    if (btn) {
-      btn.innerText = '✅ ফোন নোটিফিকেশন চালু আছে';
-      btn.disabled = true;
-    }
-    showCustomAlert("ফোন নোটিফিকেশন সফলভাবে চালু হয়েছে। এখন এডমিনের পাঠানো নোটিফিকেশন ফোনে পাবেন।", "সফল", "success");
-
-    pushMessaging.onMessage((payload) => {
-      const n = payload.notification || {};
-      const title = n.title || payload.data?.title || 'EarnerApp';
-      const body = n.body || payload.data?.body || '';
-      const titleEl = document.getElementById('notif-title');
-      const descEl = document.getElementById('notif-desc');
-      if (titleEl) titleEl.innerText = title;
-      if (descEl) descEl.innerText = body;
-      if (Notification.permission === 'granted') {
-        try {
-          new Notification(title, { body, icon: '/favicon.ico', badge: '/favicon.ico' });
-        } catch (_) {}
-      }
-    });
-  } catch (error) {
-    console.error('FCM setup error:', error);
-    showCustomAlert("নোটিফিকেশন চালু করা যায়নি। HTTPS, VAPID key এবং Firebase Messaging সেটিংস পরীক্ষা করুন।", "Push Error", "error");
-  }
-}
-
-async function initPushNotifications() {
-  if (!currentUser || FCM_VAPID_KEY === "YOUR_FIREBASE_VAPID_PUBLIC_KEY") return;
-  try {
-    const registration = await registerPushServiceWorker();
-    if (!registration) return;
-    pushMessaging = firebase.messaging();
-    const permission = Notification.permission;
-    if (permission === 'granted') {
-      const token = await pushMessaging.getToken({
-        vapidKey: FCM_VAPID_KEY,
-        serviceWorkerRegistration: registration
-      });
-      if (token) {
-        const tokenKey = encodeURIComponent(token).replace(/\./g, '%2E');
-        await db.ref('users/' + currentUser.uid + '/fcmTokens/' + tokenKey).set({
-          token,
-          updatedAt: firebase.database.ServerValue.TIMESTAMP
-        });
-      }
-      pushMessaging.onMessage((payload) => {
-        const n = payload.notification || {};
-        const title = n.title || payload.data?.title || 'EarnerApp';
-        const body = n.body || payload.data?.body || '';
-        const titleEl = document.getElementById('notif-title');
-        const descEl = document.getElementById('notif-desc');
-        if (titleEl) titleEl.innerText = title;
-        if (descEl) descEl.innerText = body;
-      });
-      const btn = document.getElementById('enable-push-btn');
-      if (btn) { btn.innerText = '✅ ফোন নোটিফিকেশন চালু আছে'; btn.disabled = true; }
-    }
-  } catch (e) {
-    console.warn('FCM initialization skipped:', e);
-  }
-}
-
 // Auth Observer
 auth.onAuthStateChanged((user) => {
   if (user) {
@@ -280,7 +168,6 @@ auth.onAuthStateChanged((user) => {
     renderLiveWithdrawsInfinite();
     listenLiveBroadcastNotifications();
     checkAndShowWelcomeNotice();
-    initPushNotifications();
     handleInitialPathRouting();
   } else {
     currentUser = null;
@@ -716,28 +603,10 @@ function listenLiveBroadcastNotifications() {
   db.ref('notifications/broadcast').on('value', snap => {
     if (snap.exists()) {
       const notif = snap.val();
-      const title = notif.title || 'নোটিফিকেশন';
-      const desc = notif.desc || '';
-      const titleEl = document.getElementById('notif-title');
-      const descEl = document.getElementById('notif-desc');
-      if (titleEl) titleEl.innerText = title;
-      if (descEl) descEl.innerText = desc;
-
-      const body = document.getElementById('notif-modal-body');
-      if (body) {
-        body.innerHTML = `<div class="notif-item">
-          <i class="fa-solid fa-bullhorn" style="color:var(--primary-color); font-size:20px;"></i>
-          <div><h5 style="font-size:13px;">${escapeHtml(title)}</h5>
-          <p style="font-size:11px; color:var(--text-muted);">${escapeHtml(desc)}</p></div>
-        </div>`;
-      }
+      document.getElementById('notif-title').innerText = notif.title || 'নোটিফিকেশন';
+      document.getElementById('notif-desc').innerText = notif.desc || '';
     }
   });
-}
-function escapeHtml(value) {
-  const div = document.createElement('div');
-  div.textContent = value == null ? '' : String(value);
-  return div.innerHTML;
 }
 
 // VIP PLANS LOAD & PURCHASE
