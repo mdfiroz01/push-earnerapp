@@ -308,7 +308,7 @@ window.resetPlanForm = function() {
 };
 
 // ----------------------------------------------------
-// 4. TASK CREATION WITH BATCH QUANTITY SUPPORT
+// 4. TASK CREATION WITH ATOMIC MULTI-UPDATE BATCHing
 // ----------------------------------------------------
 document.getElementById('admin-add-task-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -439,7 +439,6 @@ function loadDepositsAdmin() {
   });
 }
 
-// APPROVE DEPOSIT WITH RELIABLE ASYNC EXECUTION
 window.approveDeposit = async function(depId, uid, amount) {
   try {
     await ensureAdminFirebaseAuth();
@@ -469,7 +468,6 @@ window.approveDeposit = async function(depId, uid, amount) {
       updates[`users/${uid}/vipDailyProfit`] = target.dailyProfit;
       activatedPlanName = target.planName;
 
-      // Get plan withdraw fee %
       const planSnap = await db.ref('plans').orderByChild('vipLevel').equalTo(target.vipLevel).once('value');
       if (planSnap.exists()) {
         planSnap.forEach(p => {
@@ -807,47 +805,16 @@ window.saveMarqueeNotice = async function() {
 };
 
 window.sendBroadcastNotification = async function() {
-  try {
-    await ensureAdminFirebaseAuth();
+  await ensureAdminFirebaseAuth();
+  const title = document.getElementById('notif-broadcast-title').value;
+  const desc = document.getElementById('notif-broadcast-desc').value;
+  if (!title || !desc) return alert('টাইটেল ও মেসেজ দুটিই লিখুন।');
 
-    const title = document.getElementById('notif-broadcast-title').value.trim();
-    const desc = document.getElementById('notif-broadcast-desc').value.trim();
-    if (!title || !desc) {
-      alert('টাইটেল ও মেসেজ দুটিই লিখুন।');
-      return;
-    }
-
-    const user = firebase.auth().currentUser;
-    if (!user) throw new Error('Admin login required');
-
-    const idToken = await user.getIdToken(true);
-
-    const response = await fetch('/api/send-notification', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + idToken
-      },
-      body: JSON.stringify({ title, body: desc })
-    });
-
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(result.error || 'Notification server error');
-    }
-
-    // Keep the existing in-app broadcast notice as well.
-    await db.ref('notifications/broadcast').set({
-      title,
-      desc,
-      timestamp: firebase.database.ServerValue.TIMESTAMP
-    });
-
-    alert(`সফল! ${result.sent || 0}টি ডিভাইসে নোটিফিকেশন পাঠানো হয়েছে। 🚀`);
+  db.ref('notifications/broadcast').set({
+    title: title, desc: desc, timestamp: firebase.database.ServerValue.TIMESTAMP
+  }).then(() => {
+    alert('পুশ নোটিফিকেশন ব্রডকাস্ট পাঠানো হয়েছে! 🚀');
     document.getElementById('notif-broadcast-title').value = '';
     document.getElementById('notif-broadcast-desc').value = '';
-  } catch (error) {
-    console.error('Broadcast error:', error);
-    alert('নোটিফিকেশন পাঠানো যায়নি: ' + error.message);
-  }
+  });
 };
