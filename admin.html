@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -59,6 +58,7 @@
       <li onclick="showAdminSection('sec-settings')"><i class="fa-solid fa-gears"></i> সাইট লোগো ও ডিফোল্ট ফি</li>
       <li onclick="showAdminSection('sec-slider')"><i class="fa-solid fa-images"></i> ড্যাশবোর্ড স্লাইডার</li>
       <li onclick="showAdminSection('sec-welcome-notice')"><i class="fa-solid fa-window-restore"></i> পপ-আপ ওয়েলকাম নোটিশ</li>
+      <li onclick="showAdminSection('sec-ai')"><i class="fa-solid fa-wand-magic-sparkles"></i> Gemini AI সেটিংস</li>
       <li onclick="showAdminSection('sec-social')"><i class="fa-solid fa-headset"></i> ফ্লোটিং সাপোর্ট লিংক</li>
       <li onclick="showAdminSection('sec-notices')"><i class="fa-solid fa-bullhorn"></i> নোটিশ ও ব্রডকাস্ট</li>
       <li onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket" style="color:var(--danger)"></i> লগআউট</li>
@@ -234,7 +234,7 @@
       <div id="admin-sliders-list" style="margin-top:8px;"></div>
     </div>
 
-    <!-- SECTION 10: WELCOME NOTICE & BROADCAST -->
+    <!-- SECTION 10: WELCOME NOTICE -->
     <div id="sec-welcome-notice" class="admin-section hidden admin-card">
       <h3><i class="fa-solid fa-window-restore" style="color:#05b381"></i> পপ-আপ ওয়েলকাম নোটিশ</h3>
       <div class="form-group" style="margin-top:10px;"><label>টাইটেল</label><input type="text" id="welcome-title-input" class="admin-form-control"></div>
@@ -249,10 +249,44 @@
       <button class="btn-action" onclick="saveWelcomePopUpNotice()">সেভ করুন</button>
     </div>
 
-    <!-- SECTION 11: SOCIAL MEDIA SUPPORT FAB MANAGEMENT -->
+    <!-- SECTION 11: GEMINI AI ASSISTANT CONFIGURATION -->
+    <div id="sec-ai" class="admin-section hidden admin-card">
+      <h3><i class="fa-solid fa-wand-magic-sparkles" style="color:#05b381"></i> Gemini AI অ্যাসিস্ট্যান্ট সেটিংস</h3>
+      <p style="font-size:11px; color:#64748b; margin-bottom:12px;">ইউজার প্যানেলে AI চ্যাট অ্যাসিস্ট্যান্টের API Key, মডিউল ও ইনস্ট্রাকশন সেট করুন</p>
+
+      <form id="admin-ai-form" style="display:grid; gap:10px;">
+        <div class="form-group">
+          <label><b>Gemini / AI API Key</b></label>
+          <input type="text" id="ai-api-key" class="admin-form-control" placeholder="AI-apiKey..." required>
+        </div>
+
+        <div class="form-group">
+          <label><b>AI Model Name</b></label>
+          <input type="text" id="ai-model" class="admin-form-control" placeholder="gemini-1.5-flash" required value="gemini-1.5-flash">
+        </div>
+
+        <div class="form-group">
+          <label><b>API Endpoint Link</b></label>
+          <input type="url" id="ai-endpoint" class="admin-form-control" placeholder="https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent" required value="https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent">
+        </div>
+
+        <div class="form-group">
+          <label><b>AI System Prompt (সাইটের সাধারণ কন্সটেক্সট)</b></label>
+          <textarea id="ai-system-prompt" class="admin-form-control" rows="3" placeholder="আপনি EarnerApp-এর অফিসিয়াল AI সহায়কারী। ইউজারকে বাংলা ভাষায় বিনম্রভাবে সাহায্য করুন।"></textarea>
+        </div>
+
+        <div style="margin-bottom:10px; font-size:13px; color:#0f172a;">
+          <label><input type="checkbox" id="ai-enable-toggle" checked> AI চ্যাট অ্যাসিস্ট্যান্ট অন (Enable) রাখুন</label>
+        </div>
+
+        <button type="submit" class="btn-action">AI সেটিংস সেভ করুন 🚀</button>
+      </form>
+    </div>
+
+    <!-- SECTION 12: SOCIAL MEDIA SUPPORT FAB MANAGEMENT -->
     <div id="sec-social" class="admin-section hidden admin-card">
       <h3><i class="fa-solid fa-headset" style="color:#05b381"></i> ফ্লোটিং সাপোর্ট ও সোশ্যাল মিডিয়া লিংক</h3>
-      <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">ইউজার প্যানেলের ৯০-ডিগ্রি ফ্লোটিং বাটন থেকে যেসব সাপোর্ট লিংক অন হবে</p>
+      <p style="font-size:11px; color:#64748b; margin-bottom:12px;">ইউজার প্যানেলের ৯০-ডিগ্রি ফ্লোটিং বাটন থেকে যেসব সাপোর্ট লিংক অন হবে</p>
 
       <form id="admin-social-form" style="display:grid; gap:10px;">
         <input type="hidden" id="edit-social-key" value="">
@@ -267,7 +301,7 @@
       <div id="admin-social-list" style="margin-top:10px;"></div>
     </div>
 
-    <!-- SECTION 12: MARQUEE & BROADCAST -->
+    <!-- SECTION 13: MARQUEE & BROADCAST -->
     <div id="sec-notices" class="admin-section hidden admin-card">
       <h3><i class="fa-solid fa-bullhorn" style="color:#05b381"></i> নোটিশ ও পুশ নোটিফিকেশন</h3>
       <div class="form-group" style="margin-top:10px;">
