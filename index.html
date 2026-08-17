@@ -8,11 +8,19 @@
   <!-- FAVICON ICON -->
   <link rel="icon" type="image/png" href="https://i.postimg.cc/nLWFr8bT/file-00000000bd4482119c9000fc41b37ec4.png">
 
-  <!-- OPEN GRAPH META TAGS -->
+  <!-- OPEN GRAPH / SOCIAL MEDIA LINK SHARE PREVIEW META TAGS -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="EarnerApp - প্রিমিয়াম অনলাইন আর্নিং প্ল্যাটফর্ম">
-  <meta property="og:description" content="সহজ দৈনিক টাস্ক সম্পন্ন করে এবং প্রিমিয়াম প্ল্যান এক্টিভ করে ঘরে বসে আয় শুরু করুন। বিকাশ, নগদ ও রকেটে দ্রুত পেমент গ্রহণ করুন।">
+  <meta property="og:description" content="সহজ দৈনিক টাস্ক সম্পন্ন করে এবং প্রিমিয়াম প্ল্যান এক্টিভ করে ঘরে বসে আয় শুরু করুন। বিকাশ, নগদ ও রকেটে দ্রুত পেমেন্ট গ্রহণ করুন।">
   <meta property="og:image" content="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- TWITTER CARD META TAGS -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="EarnerApp - প্রিমিয়াম অনলাইন আর্নিং প্ল্যাটফর্ম">
+  <meta name="twitter:description" content="সহজ দৈনিক টাস্ক সম্পন্ন করে এবং প্রিমিয়াম প্ল্যান এক্টিভ করে ঘরে বসে আয় শুরু করুন।">
+  <meta name="twitter:image" content="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png">
 
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,11 +32,11 @@
 </head>
 <body>
 
-  <!-- AUTH MODAL -->
+  <!-- AUTH MODAL CONTAINER -->
   <div id="auth-container" class="modal-overlay">
     <div class="modal-content">
       
-      <!-- LOGIN FORM -->
+      <!-- 1. LOGIN FORM -->
       <form id="login-form">
         <div style="text-align:center; margin-bottom:15px;">
           <img src="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png" id="login-app-logo" class="auth-ring-avatar" alt="Logo">
@@ -52,7 +60,7 @@
         </p>
       </form>
 
-      <!-- REGISTER FORM -->
+      <!-- 2. REGISTER FORM -->
       <form id="register-form" class="hidden">
         <div style="text-align:center; margin-bottom:15px;">
           <img src="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png" class="auth-ring-avatar" alt="Logo">
@@ -88,7 +96,7 @@
         </p>
       </form>
 
-      <!-- FORGOT PASSWORD FORM -->
+      <!-- 3. FORGOT / RESET PASSWORD FORM -->
       <form id="forgot-password-form" class="hidden">
         <div style="text-align:center; margin-bottom:15px;">
           <img src="https://i.postimg.cc/kXTyBwGr/file-00000000a5dc82119e23c1aae6e24a70.png" class="auth-ring-avatar" alt="Logo">
@@ -166,7 +174,6 @@
         </div>
       </div>
 
-      <!-- Quick Suggestion Chips -->
       <div class="ai-chip-container">
         <div class="ai-chip" onclick="sendQuickAiPrompt('আমার ওয়ালেট ব্যালেন্স কত?')">💰 ব্যালেন্স কত?</div>
         <div class="ai-chip" onclick="sendQuickAiPrompt('কীভাবে ডিপোজিট করব?')">💳 ডিপোজিট নিয়ম</div>
@@ -225,7 +232,7 @@
   <!-- MAIN APP CONTAINER -->
   <div id="app-container" class="app-viewport hidden">
 
-    <!-- TOP HEADER (WITH AI SPARKLE ICON & DARK/LIGHT MODE SWITCHER NEXT TO IT) -->
+    <!-- TOP HEADER -->
     <header class="top-header">
       <div class="header-left">
         <i class="fa-solid fa-bars menu-icon" onclick="openSidebar()"></i>
@@ -235,10 +242,9 @@
         </div>
       </div>
       
-      <!-- HEADER RIGHT CONTROLS: GEMINI AI ICON + THEME TOGGLE + BELL ICON -->
       <div style="display:flex; align-items:center; gap:10px;">
         
-        <!-- GEMINI AI ASSISTANT ICON -->
+        <!-- GEMINI AI SPARKLE BUTTON -->
         <div class="ai-header-btn" onclick="openAiChatModal()" title="AI সাপোর্ট অ্যাসিস্ট্যান্ট">
           <i class="fa-solid fa-wand-magic-sparkles gemini-icon-animated"></i>
         </div>
