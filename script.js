@@ -155,7 +155,7 @@ let systemWithdrawChargePercent = 5;
 // FIREBASE WEB PUSH NOTIFICATIONS (FCM)
 // Replace this with the Web Push certificate public key from Firebase Console:
 // Project settings -> Cloud Messaging -> Web configuration -> Web Push certificates.
-const FCM_VAPID_KEY = "YOUR_FIREBASE_VAPID_PUBLIC_KEY";
+const FCM_VAPID_KEY = "BOWagt56dvD6oPyBwTgSGOiinIDLJINPSbemQQ9aQ68w6WikY1EBAaQZb1-e9fUrTu1P9RultlAkxk-54A8kEUM";
 
 let pushMessaging = null;
 
@@ -173,7 +173,7 @@ async function registerPushServiceWorker() {
 
 async function enablePushNotifications() {
   if (!currentUser) return;
-  if (FCM_VAPID_KEY === "YOUR_FIREBASE_VAPID_PUBLIC_KEY") {
+  if (FCM_VAPID_KEY === "BOWagt56dvD6oPyBwTgSGOiinIDLJINPSbemQQ9aQ68w6WikY1EBAaQZb1-e9fUrTu1P9RultlAkxk-54A8kEUM") {
     showCustomAlert("প্রথমে Firebase Console থেকে Web Push VAPID public key বসাতে হবে।", "Push সেটআপ বাকি", "warning");
     return;
   }
@@ -228,7 +228,7 @@ async function enablePushNotifications() {
 }
 
 async function initPushNotifications() {
-  if (!currentUser || FCM_VAPID_KEY === "YOUR_FIREBASE_VAPID_PUBLIC_KEY") return;
+  if (!currentUser || FCM_VAPID_KEY === "BOWagt56dvD6oPyBwTgSGOiinIDLJINPSbemQQ9aQ68w6WikY1EBAaQZb1-e9fUrTu1P9RultlAkxk-54A8kEUM") return;
   try {
     const registration = await registerPushServiceWorker();
     if (!registration) return;
